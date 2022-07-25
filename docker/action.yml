@@ -10,10 +10,6 @@ inputs:
   dockerhub-token:
     description: DockerHub token
     required: true
-  
-
-env:
-  IMAGE_TAGS: ${{ inputs.dockerhub-username }}/${{ inputs.image-name }}:latest
 
 runs:
   using: "composite"
@@ -34,6 +30,6 @@ runs:
       uses: docker/build-push-action@v3
       with:
         push: true
-        tags: ${{ env.IMAGE_TAGS }}
-        cache-from: type=registry,ref=${{ env.IMAGE_TAGS }}
+        tags: ${{ inputs.dockerhub-username }}/${{ inputs.image-name }}:latest
+        cache-from: type=registry,ref=${{ inputs.dockerhub-username }}/${{ inputs.image-name }}:latest
         cache-to: type=inline
