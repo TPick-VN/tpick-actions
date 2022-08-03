@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tpick-crawler-deployment
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: tpick-crawler-deployment
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: tpick-crawler-deployment
+    spec:
+      containers:
+        - name: tpick-crawler
+          image: hansatthan/tpick-crawler:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          env:
+            - name: external_chrome
+              value: "true"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tpick-crawler-service
+  namespace: default
+  labels:
+    app: tpick-crawler-service
+spec:
+  ports:
+    - port: 80
+      name: http
+  selector:
+    app: tpick-crawler-deployment
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  name: tpick-crawler-ingress
+  namespace: default
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /tpick-crawler(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: tpick-crawler-service
+                port:
+                  number: 80

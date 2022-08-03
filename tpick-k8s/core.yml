@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tpick-core-deployment
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: tpick-core-deployment
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: tpick-core-deployment
+    spec:
+      containers:
+        - name: tpick-core
+          image: hansatthan/tpick-core:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          env:
+            - name: Persistence__DatabaseType
+              value: "Sqlserver"
+            - name: ExternalServices__TPickCrawler
+              value: "https://api.tpick.tk/tpick-crawler/"
+            - name: Persistence__ConnectionString
+              value: ""
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tpick-core-service
+  namespace: default
+  labels:
+    app: tpick-core-service
+spec:
+  ports:
+    - port: 80
+      name: http
+  selector:
+    app: tpick-core-deployment
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+  name: tpick-core-ingress
+  namespace: default
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /tpick-core(/|$)(.*)
+            pathType: Prefix
+            backend:
+              service:
+                name: tpick-core-service
+                port:
+                  number: 80
