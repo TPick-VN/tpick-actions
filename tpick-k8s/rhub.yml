@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tpick-core-deployment
+  name: tpick-rhub-deployment
   namespace: default
 spec:
   selector:
     matchLabels:
-      app: tpick-core-deployment
+      app: tpick-rhub-deployment
   replicas: 1
   template:
     metadata:
       labels:
-        app: tpick-core-deployment
+        app: tpick-rhub-deployment
     spec:
       containers:
-        - name: tpick-core
-          image: hansatthan/tpick-core:latest
+        - name: tpick-rhub
+          image: hansatthan/tpick-rhub:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -33,33 +33,33 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: tpick-core-service
+  name: tpick-rhub-service
   namespace: default
   labels:
-    app: tpick-core-service
+    app: tpick-rhub-service
 spec:
   ports:
     - port: 80
       name: http
   selector:
-    app: tpick-core-deployment
+    app: tpick-rhub-deployment
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
-  name: tpick-core-ingress
+  name: tpick-rhub-ingress
   namespace: default
 spec:
   ingressClassName: nginx
   rules:
     - http:
         paths:
-          - path: /tpick-core(/|$)(.*)
+          - path: /tpick-rhub(/|$)(.*)
             pathType: Prefix
             backend:
               service:
-                name: tpick-core-service
+                name: tpick-rhub-service
                 port:
                   number: 80
