@@ -1,0 +1,81 @@
+version: '3.7'
+
+services:
+  redis:
+    image: bitnami/redis:6.2
+    expose:
+      - "6379"
+    ports:
+      - 16380:6379
+    # command: /bin/sh -c "redis-server --requirepass Abcd123!"
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    restart: unless-stopped
+    networks:
+      - tpick-net
+
+  mysql:
+    image: mysql:8
+    command: mysqld --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    expose:
+      - "3306"
+    ports:
+      - 3306:3306
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: Abcd123!
+    networks:
+      - tpick-net
+
+  tpick-crawler:
+    image: hansatthan/tpick-crawler:latest
+    pull_policy: always
+    expose:
+      - "80"
+    ports:
+      - 81:80
+    restart: unless-stopped
+    environment:
+      external_chrome: true
+    networks:
+      - tpick-net
+
+  tpick-core:
+    image: hansatthan/tpick-core:latest
+    pull_policy: always
+    expose:
+      - "80"
+    ports:
+      - 82:80
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - mysql
+    networks:
+      - tpick-net
+    environment:
+      Persistence__DatabaseType: "mysql"
+      ExternalServices__TPickCrawler: "http://tpick-crawler:80/"
+      Persistence__ConnectionString: "Server=mysql;Database=TPick;User Id=root;Password=Abcd123!;"
+      Messaging__ConnectionString: "redis:6379"
+
+  tpick-rhub:
+    image: hansatthan/tpick-rhub:latest
+    pull_policy: always
+    expose:
+      - "80"
+    ports:
+      - 83:80
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - mysql
+    networks:
+      - tpick-net
+    environment:
+      Persistence__DatabaseType: "mysql"
+      Persistence__ConnectionString: "Server=mysql;Database=TPick;User Id=root;Password=Abcd123!;"
+      Messaging__ConnectionString: "redis:6379"
+
+networks:
+  tpick-net:

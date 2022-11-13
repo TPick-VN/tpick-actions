@@ -1,0 +1,12 @@
+version: "3.7"
+
+services:
+  tpick-core:
+    build: ../../tpick-core
+    pull_policy: build
+
+  tpick-rhub:
+    build: ../../tpick-rhub
+    pull_policy: build
+networks:
+  tpick-net:
